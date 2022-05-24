@@ -20,4 +20,18 @@ public class Populate {
     return lands;
   }
   
+  protected static Ship[] ships() {
+    Ship[] ships = new Ship[7];
+    
+    ships[0] = new Ship("Raft", 0, 20, 6, 30, 0);
+    ships[1] = new Ship("Jimmy Rigger", 3000, 60, 7, 50, 1);
+    ships[2] = new Ship("Carabelle", 9000, 200, 8, 70, 1);
+    ships[3] = new Ship("Sea Sultan", 30000, 600, 9, 90, 2);
+    ships[4] = new Ship("The Koi", 90000, 1800, 12, 100, 3);
+    ships[5] = new Ship("Steaming Fury", 300000, 5000, 12, 140, 4);
+    ships[6] = new Ship("Phoenix Warbird", 1000000, 6000, 13, 180, 5);
+    
+    return ships;
+  }
+  
 }
