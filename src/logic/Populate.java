@@ -34,4 +34,17 @@ public class Populate {
     return ships;
   }
   
+  protected static Crew[] crew() {
+    Crew[] crew = new Crew[6];
+    
+    crew[0] = new Crew("Cabin Boy", 0);
+    crew[1] = new Crew("Cook", 0);
+    crew[2] = new Crew("Shipwright", 20000);
+    crew[3] = new Crew("Cargo Master", 15000);
+    crew[4] = new Crew("Navigator", 12000);
+    crew[5] = new Crew("Cannoneer", 20000);
+    
+    return crew;
+  }
+  
 }
