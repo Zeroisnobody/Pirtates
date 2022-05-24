@@ -23,7 +23,7 @@ public class Island {
    * @param medicine The price of medicine
    * @param silk The price of silk
    */
-  public Island(String name, int grain, int spice, int medicine, int silk) {
+  protected Island(String name, int grain, int spice, int medicine, int silk) {
     this.name = name;
     this.grain = grain;
     this.spice = spice;
