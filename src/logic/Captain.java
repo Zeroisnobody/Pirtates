@@ -22,7 +22,7 @@ public class Captain {
    * @param cabinBoy The cabin boy
    * @param raft The original ship
    */
-  public Captain(Crew cook, Crew cabinBoy, Ship raft) {
+  public Captain(Crew cabinBoy, Crew cook, Ship raft) {
     crew.add(cabinBoy);
     crew.add(cook);
     ship = raft;
@@ -45,6 +45,14 @@ public class Captain {
   
   public int doubloons() {
     return doubloons;
+  }
+  
+  public int cargo() {
+    return ship.getCargo() - cargo.total();
+  }
+  
+  public int cargoTotal() {
+    return ship.getCargo();
   }
   
   /**
@@ -74,66 +82,30 @@ public class Captain {
     return Math.max(maxNum, maxPrice);
   }
   
-  public void buyGrain(int price, int num) {
-    buy(0, price, num);
-  }
-  
-  public void buySpice(int price, int num) {
-    buy(1, price, num);
-  }
-  
-  public void buyMedicine(int price, int num) {
-    buy(2, price, num);
-  }
-  
-  public void buySilk(int price, int num) {
-    buy(3, price, num);
-  }
-  
-  private void buy(int index, int price, int num) {
+  protected void buy(int index, int price, int num) {
     int amount = Math.min(getBuyMax(price), num);
     int cost = amount * price;
     cargo.buy(index, amount);
     doubloons -= cost;
   }
   
-  public int getSellMaxGrain() {
-    return cargo.get(0);
+  public int getSellMax(int index) {
+    return cargo.get(index);
   }
   
-  public int getSellMaxSpice() {
-    return cargo.get(1);
-  }
-  
-  public int getSellMaxMedicine() {
-    return cargo.get(2);
-  }
-  
-  public int getSellMaxSilk() {
-    return cargo.get(3);
-  }
-  
-  public void sellGrain(int price, int num) {
-    sell(0, price, num);
-  }
-  
-  public void sellSpice(int price, int num) {
-    sell(1, price, num);
-  }
-  
-  public void sellMedicine(int price, int num) {
-    sell(2, price, num);
-  }
-  
-  public void sellSilk(int price, int num) {
-    sell(3, price, num);
-  }
-  
-  private void sell(int index, int price, int num) {
+  protected void sell(int index, int price, int num) {
     int amount = Math.min(cargo.get(index), num);
     int cost = amount * price;
     cargo.sell(index, amount);
     doubloons += cost;
+  }
+  
+  protected void addMember(Crew member) {
+    crew.add(member);
+  }
+  
+  protected String shipDescription() {
+    return ship.toString();
   }
   
 }
