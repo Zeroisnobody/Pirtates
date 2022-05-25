@@ -47,7 +47,7 @@ public class Main {
      */
     public String read() {
       try {
-        return read.readLine();
+        return read.readLine().toLowerCase();
       } catch (IOException e) {
         System.out.println("Something went wrong with System.in");
         e.printStackTrace();
