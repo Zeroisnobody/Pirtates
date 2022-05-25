@@ -120,4 +120,8 @@ public class Ship {
     return lifeLeft > 0;
   }
   
+  public String toString() {
+    return name + ":\tPrice = D" + price + "\tCargo = " + cargo;
+  }
+  
 }
