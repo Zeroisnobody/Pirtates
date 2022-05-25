@@ -20,6 +20,10 @@ public class Populate {
     return lands;
   }
   
+  protected static String homeLand() {
+    return "Fort Ridley";
+  }
+  
   protected static Ship[] ships() {
     Ship[] ships = new Ship[7];
     
@@ -38,13 +42,29 @@ public class Populate {
     Crew[] crew = new Crew[6];
     
     crew[0] = new Crew("Cabin Boy", 0);
-    crew[1] = new Crew("Cook", 0);
-    crew[2] = new Crew("Shipwright", 20000);
-    crew[3] = new Crew("Cargo Master", 15000);
-    crew[4] = new Crew("Navigator", 12000);
-    crew[5] = new Crew("Cannoneer", 20000);
+    crew[1] = new Crew("Shipwright", 20000);
+    crew[2] = new Crew("Cargo Master", 15000);
+    crew[3] = new Crew("Navigator", 12000);
+    crew[4] = new Crew("Cannoneer", 20000);
+    crew[5] = new Crew("Cook", 0);
     
     return crew;
+  }
+
+  /**
+   * Return the name of the item.
+
+   * @param index The index of the item
+   * @return The item's name
+   */
+  public static String item(int index) {
+    switch (index) {
+      case 0: return "Grain";
+      case 1: return "Spices";
+      case 2: return "Medicine";
+      case 3: return "Silk";
+      default: return "";
+    }
   }
   
 }
