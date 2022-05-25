@@ -34,9 +34,7 @@ public class Speak {
         + "your ship and dominate the seas!");
     out.print("Keep an eye out for talent. Hiring new crew members "
         + "is well worth the price!");
-    out.print("Set sail?");
-    String answer = user.read();
-    if (answer.equalsIgnoreCase("yes")) {
+    if (confirm("Set sail?")) {
       game.setSail();
       startJourney();
     }
