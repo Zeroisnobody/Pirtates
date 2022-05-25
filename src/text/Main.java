@@ -13,7 +13,7 @@ import java.io.InputStreamReader;
 public class Main {
 
   public static void main(String[] args) {
-    //    new Speak(new Input(), new Output());
+    new Speak(new Input(), new Output());
   }
 
   /**
@@ -22,7 +22,7 @@ public class Main {
    * @author Bryony
    *
    */
-  public class Output {
+  public static class Output {
 
     public void print(String message) {
       System.out.println(message);
@@ -36,7 +36,7 @@ public class Main {
    * @author Bryony
    *
    */
-  public class Input {
+  public static class Input {
 
     private BufferedReader read = new BufferedReader(new InputStreamReader(System.in));
 

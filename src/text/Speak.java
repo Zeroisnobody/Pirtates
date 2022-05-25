@@ -1,11 +1,10 @@
 package text;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.List;
 import logic.Archipelago;
 import logic.Populate;
+import text.Main.Input;
+import text.Main.Output;
 
 /**
  * The User Interface (text-based).
@@ -16,50 +15,48 @@ import logic.Populate;
 public class Speak {
 
   private Archipelago game;
-  private BufferedReader user;
-
-  public static void main(String[] args) throws IOException {
-    new Speak();
-  }
+  private Input user;
+  private Output out;
 
   /**
    * Set up game to play using text.
 
-   * @throws IOException Something went wrong with getting the user response.
+   * @Something went wrong with getting the user response.
    */
-  public Speak() throws IOException {
+  public Speak(Input user, Output out) {
     game = new Archipelago();
-    user = new BufferedReader(new InputStreamReader(System.in));
-    System.out.println("Welcome to " + game.getIslandName() + "!");
-    System.out.println("Visit the trading posts of the different islands. "
+    this.user = user;
+    this.out = out;
+    out.print("Welcome to " + game.getIslandName() + "!");
+    out.print("Visit the trading posts of the different islands. "
         + "Compare their prices and trade wisely to amass great wealth!");
-    System.out.println("Head to the shipyards at Dragon Cove to upgrade "
+    out.print("Head to the shipyards at Dragon Cove to upgrade "
         + "your ship and dominate the seas!");
-    System.out.println("Keep an eye out for talent. Hiring new crew members "
+    out.print("Keep an eye out for talent. Hiring new crew members "
         + "is well worth the price!");
-    System.out.println("Set sail?");
-    String answer = user.readLine();
+    out.print("Set sail?");
+    String answer = user.read();
     if (answer.equalsIgnoreCase("yes")) {
       game.setSail();
       startJourney();
     }
   }
 
-  private void startJourney() throws IOException {
+  private void startJourney() {
     if (game.atSea()) {
-      System.out.println("You are sailing at " + game.getSpeed() + " knots "
+      out.print("You are sailing at " + game.getSpeed() + " knots "
           + "through the clear waters.");
-      System.out.println("Where do you want to head?");
+      out.print("Where do you want to head?");
       List<String> islands = game.getIslandNames();
       for (int i = 0; i < islands.size(); i++) {
-        System.out.println("\t" + islands.get(i) + " (" + i + ")");
+        out.print("\t" + islands.get(i) + " (" + i + ")");
       }
       chooseIsland();
     }
   }
 
-  private void chooseIsland() throws IOException {
-    String answer = user.readLine();
+  private void chooseIsland() {
+    String answer = user.read();
     switch (answer) {
       case "0": 
         travelTo(0);
@@ -77,27 +74,27 @@ public class Speak {
         travelTo(4);
         break;
       default:
-        System.out.println("Please enter the number of the island you want to travel to.");
+        out.print("Please enter the number of the island you want to travel to.");
         chooseIsland();
     }
   }
 
-  private void travelTo(int index) throws IOException {
+  private void travelTo(int index) {
     game.travelTo(index);
-    System.out.println("You have arrived at " + game.getIslandName());
+    out.print("You have arrived at " + game.getIslandName());
 
     boolean onLand = true;
     while (onLand) { 
-      System.out.println("What do you want to do?");
-      System.out.println("Trade (0)");
-      System.out.println("Look Around (1)");
-      System.out.println("Set Sail (2)");
+      out.print("What do you want to do?");
+      out.print("Trade (0)");
+      out.print("Look Around (1)");
+      out.print("Set Sail (2)");
       onLand = chooseAction();
     }
   }
 
-  private boolean chooseAction() throws IOException {
-    String answer = user.readLine();
+  private boolean chooseAction() {
+    String answer = user.read();
     switch (answer) {
       case "0": 
         trade();
@@ -109,45 +106,45 @@ public class Speak {
         startJourney();
         return false;
       default:
-        System.out.println("Choose the number of the action you wish to perform.");
+        out.print("Choose the number of the action you wish to perform.");
         return chooseAction();
     }
   }
 
-  private void lookAround() throws IOException {
+  private void lookAround() {
     switch (game.getIslandName()) {
       case "Dragon Cove": 
-        System.out.println("You find the shipyard.");
-        System.out.println("Your current ship:");
-        System.out.println("\t" + game.shipDescription());
+        out.print("You find the shipyard.");
+        out.print("Your current ship:");
+        out.print("\t" + game.shipDescription());
         if (confirm("Do you want to purchase a new ship?")) {
           buyShip();
         }
         break;
       default:
         if (game.crewMemberAvailable()) {
-          System.out.println("You find a " + game.getCrewName());
+          out.print("You find a " + game.getCrewName());
           if (confirm("Would you like to hire them for " + game.getCrewCost())) {
-            System.out.println(game.getCrewName() + " has joined your crew.");
+            out.print(game.getCrewName() + " has joined your crew.");
             game.hireCrew();
           }
         } else {
-          System.out.println("You find nothing.");
+          out.print("You find nothing.");
         }
     }
   }
 
-  private void buyShip() throws IOException {
+  private void buyShip() {
     List<String> ships = game.shipDescriptions();
     for (int i = 0; i < ships.size(); i++) {
-      System.out.println("\t" + ships.get(i) + " (" + i + ")");
+      out.print("\t" + ships.get(i) + " (" + i + ")");
     }
-    System.out.println("\tToo Expensive (" + ships.size() + ")");
+    out.print("\tToo Expensive (" + ships.size() + ")");
     chooseShip(ships.size());
   }
 
-  private void chooseShip(int size) throws IOException {
-    String answer = user.readLine();
+  private void chooseShip(int size) {
+    String answer = user.read();
     try {
       int index = Integer.valueOf(answer);
       if (index >= 0 && index < size) {
@@ -158,48 +155,48 @@ public class Speak {
         throw new NumberFormatException();
       }
     } catch (NumberFormatException e) {
-      System.out.println("Choose the number of the ship you want to purchase.");
+      out.print("Choose the number of the ship you want to purchase.");
       chooseShip(size);
     }
   }
 
-  private void trade() throws IOException {
-    System.out.println("The prices for buying and selling on this island are :");
-    System.out.println("\tGrain = D" + game.islandGrain() + "\tSpices = D" + game.islandSpice());
-    System.out.println("\tMedicine = D" + game.islandMedicine() + "\tSilk = D" + game.islandSilk());
-    System.out.println("Do you wish to purchase (0) or sell (1)?");
+  private void trade() {
+    out.print("The prices for buying and selling on this island are :");
+    out.print("\tGrain = D" + game.islandGrain() + "\tSpices = D" + game.islandSpice());
+    out.print("\tMedicine = D" + game.islandMedicine() + "\tSilk = D" + game.islandSilk());
+    out.print("Do you wish to purchase (0) or sell (1)?");
     chooseTrade();
   }
 
-  private void chooseTrade() throws IOException {
-    String answer = user.readLine();
+  private void chooseTrade() {
+    String answer = user.read();
     switch (answer) {
       case "0": {
-        System.out.println("Doubloons = D" + game.wallet() + "\tCargo Space = " 
+        out.print("Doubloons = D" + game.wallet() + "\tCargo Space = " 
             + game.cargoSpace() + "/" + game.cargoTotal());
-        System.out.println("What do you wish to buy?");
+        out.print("What do you wish to buy?");
         int index = chooseItem();
-        System.out.println("How many do you want to buy?");
+        out.print("How many do you want to buy?");
         purchase(index);
         break;
       }
       case "1": {
-        System.out.println("Grain = " + game.costItem(1, 0) + "\tSpices = " + game.costItem(1, 1));
-        System.out.println("Medicine = " + game.costItem(1, 2) + "\tSilk = " + game.costItem(1, 3));
-        System.out.println("What do you wish to sell?");
+        out.print("Grain = " + game.costItem(1, 0) + "\tSpices = " + game.costItem(1, 1));
+        out.print("Medicine = " + game.costItem(1, 2) + "\tSilk = " + game.costItem(1, 3));
+        out.print("What do you wish to sell?");
         int index = chooseItem();
-        System.out.println("How many do you want to sell?");
+        out.print("How many do you want to sell?");
         sell(index);
         break;
       }
       default:
-        System.out.println("Choose the number of the trade you wish to perform.");
+        out.print("Choose the number of the trade you wish to perform.");
         chooseTrade();
     }
   }
 
-  private int chooseItem() throws IOException {
-    String answer = user.readLine().toLowerCase();
+  private int chooseItem() {
+    String answer = user.read().toLowerCase();
     switch (answer) {
       case "grain":
         return 0;
@@ -210,43 +207,43 @@ public class Speak {
       case "silk":
         return 3;
       default:
-        System.out.println("Write the name of the item.");
+        out.print("Write the name of the item.");
         return chooseItem();
     }
   }
 
-  private void purchase(int index) throws IOException {
-    String answer = user.readLine();
+  private void purchase(int index) {
+    String answer = user.read();
     if (answer.equalsIgnoreCase("max")) {
       int max = game.getMaxItem(index);
-      System.out.println("Buying " + max + " " + Populate.item(index) + " for D" 
+      out.print("Buying " + max + " " + Populate.item(index) + " for D" 
           + game.costItem(max, index));
       if (confirm()) {
         game.buyItem(max, index);
-        System.out.println("Thank you for your purchase.");
+        out.print("Thank you for your purchase.");
       }
     } else {
       try {
         int ans = Math.min(Integer.valueOf(answer), game.getMaxItem(index));
-        System.out.println("Buying " + ans + " " + Populate.item(index) + " for D" 
+        out.print("Buying " + ans + " " + Populate.item(index) + " for D" 
             + game.costItem(ans, index));
         if (confirm()) {
           game.buyItem(ans, index);
-          System.out.println("Thank you for your purchase.");
+          out.print("Thank you for your purchase.");
         }
       } catch (NumberFormatException e) {
-        System.out.println("Choose either a whole number or max.");
+        out.print("Choose either a whole number or max.");
       }
     }
   }
 
-  private boolean confirm() throws IOException {
+  private boolean confirm() {
     return confirm("Confirm?");
   }
 
-  private boolean confirm(String message) throws IOException {
-    System.out.println(message);
-    String answer = user.readLine();
+  private boolean confirm(String message) {
+    out.print(message);
+    String answer = user.read();
     if (answer.equalsIgnoreCase("yes")) {
       return true;
     } else if (answer.equalsIgnoreCase("no")) {
@@ -256,27 +253,27 @@ public class Speak {
     }
   }
 
-  private void sell(int index) throws IOException {
-    String answer = user.readLine();
+  private void sell(int index) {
+    String answer = user.read();
     if (answer.equalsIgnoreCase("max")) {
       int max = game.captainItem(index);
-      System.out.println("Selling " + max + " " + Populate.item(index) + " for D" 
+      out.print("Selling " + max + " " + Populate.item(index) + " for D" 
           + game.costItem(max, index));
       if (confirm()) {
         game.sellItem(max, index);
-        System.out.println("Thank you for your sale.");
+        out.print("Thank you for your sale.");
       }
     } else {
       try {
         int ans = Math.min(Integer.valueOf(answer), game.getMaxItem(index));
-        System.out.println("Selling " + ans + " " + Populate.item(index) + " for D" 
+        out.print("Selling " + ans + " " + Populate.item(index) + " for D" 
             + game.costItem(ans, index));
         if (confirm()) {
           game.sellItem(ans, index);
-          System.out.println("Thank you for your sale.");
+          out.print("Thank you for your sale.");
         }
       } catch (NumberFormatException e) {
-        System.out.println("Choose either a whole number or max.");
+        out.print("Choose either a whole number or max.");
       }
     }
   }
