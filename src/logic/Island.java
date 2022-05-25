@@ -13,7 +13,7 @@ public class Island {
   private int spice;
   private int medicine;
   private int silk;
-  
+
   /**
    * Create an island.
 
@@ -35,40 +35,36 @@ public class Island {
     return name;
   }
 
-  public void setName(String name) {
-    this.name = name;
-  }
-
   public int getGrain() {
     return grain;
-  }
-
-  public void setGrain(int grain) {
-    this.grain = grain;
   }
 
   public int getSpice() {
     return spice;
   }
 
-  public void setSpice(int spice) {
-    this.spice = spice;
-  }
-
   public int getMedicine() {
     return medicine;
-  }
-
-  public void setMedicine(int medicine) {
-    this.medicine = medicine;
   }
 
   public int getSilk() {
     return silk;
   }
 
-  public void setSilk(int silk) {
-    this.silk = silk;
+  /**
+   * Return the price of the item at the given index.
+
+   * @param index The item's index
+   * @return The price of the item
+   */
+  public int get(int index) {
+    switch (index) {
+      case 0: return grain;
+      case 1: return spice;
+      case 2: return medicine;
+      case 3: return silk;
+      default: return 0;
+    }
   }
-  
+
 }
