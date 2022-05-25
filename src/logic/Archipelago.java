@@ -192,4 +192,8 @@ public class Archipelago {
     return player.buyShip(ships[index]);
   }
   
+  public int numShip() {
+    return ships.length;
+  }
+  
 }
