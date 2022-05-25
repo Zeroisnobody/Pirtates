@@ -105,7 +105,7 @@ public class Captain {
   }
   
   protected String shipDescription() {
-    return ship.toString();
+    return ship.toStringOwned();
   }
   
 }

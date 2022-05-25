@@ -124,4 +124,8 @@ public class Ship {
     return name + ":\tPrice = D" + price + "\tCargo = " + cargo;
   }
   
+  public String toStringOwned() {
+    return name + ":\tTrade in = D" + getTradein() + "\tCargo = " + cargo;
+  }
+  
 }
