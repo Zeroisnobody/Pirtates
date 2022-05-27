@@ -17,14 +17,28 @@ public class Cargo {
     return grain + spice + medicine + silk;
   }
   
-  Cargo(int g, int s, int m, int l) {
+  /**
+   * The Cargo.
+
+   * @param g Grain
+   * @param s Spice
+   * @param m Medicine
+   * @param l Silk
+   */
+  public Cargo(int g, int s, int m, int l) {
     grain = g;
     spice = s;
     medicine = m;
     silk = l;
   }
   
-  void buy(int index, int amount) {
+  /**
+   * Buy an item.
+
+   * @param index The item's index
+   * @param amount Number of items
+   */
+  public void buy(int index, int amount) {
     switch (index) {
       case 0: grain += amount; 
         break;
@@ -38,7 +52,13 @@ public class Cargo {
     }
   }
   
-  int get(int index) {
+  /**
+   * Get the current amount of an item.
+
+   * @param index The item index
+   * @return The amount of the item
+   */
+  public int get(int index) {
     switch (index) {
       case 0: return grain;
       case 1: return spice;
