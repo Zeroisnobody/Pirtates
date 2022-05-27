@@ -43,6 +43,10 @@ public class Captain {
     ship.heal();
   }
   
+  public void dock() {
+    ship.fix();
+  }
+  
   public int doubloons() {
     return doubloons;
   }
@@ -79,10 +83,17 @@ public class Captain {
   public int getBuyMax(int price) {
     int maxNum = ship.getCargo() - cargo.total();
     int maxPrice = (int) (Math.rint(Double.valueOf(doubloons) / Double.valueOf(price)));
-    return Math.max(maxNum, maxPrice);
+    return Math.min(maxNum, maxPrice);
   }
   
-  protected void buy(int index, int price, int num) {
+  /**
+   * Buy an Item.
+
+   * @param index Item's index
+   * @param price Item's price
+   * @param num Number of items
+   */
+  public void buy(int index, int price, int num) {
     int amount = Math.min(getBuyMax(price), num);
     int cost = amount * price;
     cargo.buy(index, amount);
@@ -93,18 +104,26 @@ public class Captain {
     return cargo.get(index);
   }
   
-  protected void sell(int index, int price, int num) {
+  /**
+   * Sell an item.
+
+   * @param index Item's index
+   * @param price Item's price
+   * @param num Number of items
+   */
+  public void sell(int index, int price, int num) {
     int amount = Math.min(cargo.get(index), num);
     int cost = amount * price;
     cargo.sell(index, amount);
     doubloons += cost;
   }
   
-  protected void addMember(Crew member) {
+  public void addMember(Crew member) {
+    doubloons -= member.getSalary();
     crew.add(member);
   }
   
-  protected String shipDescription() {
+  public String shipDescription() {
     return ship.toStringOwned();
   }
   
