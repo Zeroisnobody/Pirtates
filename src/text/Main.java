@@ -3,6 +3,7 @@ package text;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import logic.Archipelago;
 
 /**
  * The Main class for the Text-based User Interface.
@@ -13,7 +14,7 @@ import java.io.InputStreamReader;
 public class Main {
 
   public static void main(String[] args) {
-    new Speak(new Input(), new Output());
+    new Speak(new Archipelago(), new Input(), new Output());
   }
 
   /**
