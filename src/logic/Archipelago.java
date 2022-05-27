@@ -11,9 +11,10 @@ import java.util.List;
  */
 public class Archipelago {
 
-  private Crew[] possibleMembers = Populate.crew();
-  private Island[] islands = Populate.islands();
-  private Ship[] ships = Populate.ships();
+  private Populate populate = new Populate();
+  private Crew[] possibleMembers = populate.crew();
+  private Island[] islands = populate.islands();
+  private Ship[] ships = populate.ships();
 
   private Captain player;
   private int currentLand;
@@ -24,8 +25,8 @@ public class Archipelago {
    */
   public Archipelago() {
     player = new Captain(possibleMembers[0], possibleMembers[5], ships[0]);
-    possibleMembers[0] = null;
-    possibleMembers[1] = null;
+    possibleMembers[0] = Crew.empty;
+    possibleMembers[5] = Crew.empty;
     currentLand = -1;
     atSea = false;
   }
@@ -38,7 +39,7 @@ public class Archipelago {
   public String getIslandName() {
     if (currentLand == -1) {
       if (!atSea) {
-        return Populate.homeLand();
+        return populate.homeLand();
       }
       return "The Sea";
     }
@@ -54,7 +55,7 @@ public class Archipelago {
   }
 
   public boolean atSea() {
-    return atSea();
+    return atSea;
   }
 
   public int getSpeed() {
@@ -65,9 +66,17 @@ public class Archipelago {
     return Arrays.asList(islands).stream().map(i -> i.getName()).toList();
   }
 
+  /**
+   * Only travel to known islands.
+
+   * @param index Index of the island
+   */
   public void travelTo(int index) {
-    currentLand = index;
-    atSea = false;
+    if (index >= 0 && index < islands.length) {
+      currentLand = index;
+      player.dock();
+      atSea = false;
+    }
   }
 
   public int islandGrain() {
@@ -109,6 +118,7 @@ public class Archipelago {
    * @param index The index of the item
    */
   public void buyItem(int number, int index) {
+    number = Math.min(getMaxItem(index), number);
     player.buy(index, islands[currentLand].get(index), number);
   }
   
@@ -119,6 +129,7 @@ public class Archipelago {
    * @param index The index of the item
    */
   public void sellItem(int number, int index) {
+    number = Math.min(captainItem(index), number);
     player.sell(index, islands[currentLand].get(index), number);
   }
   
@@ -130,23 +141,34 @@ public class Archipelago {
     return player.getSellMax(index);
   }
   
+  private Crew getCrew() {
+    if (currentLand < 1) {
+      return Crew.empty;
+    }
+    return possibleMembers[currentLand];
+  }
+  
   public boolean crewMemberAvailable() {
-    return possibleMembers[currentLand] == null;
+    return getCrew() != Crew.empty;
   }
   
   public String getCrewName() {
-    return possibleMembers[currentLand].getName();
+    return getCrew().getName();
   }
   
   public int getCrewCost() {
-    return possibleMembers[currentLand].getSalary();
+    return getCrew().getSalary();
   }
 
   /**
    * Hire the crew member on the current island.
    */
-  public void hireCrew() {
-    switch (possibleMembers[currentLand].getName()) {
+  public boolean hireCrew() {
+    Crew hire = getCrew();
+    if (player.doubloons() < hire.getSalary() || !crewMemberAvailable()) {
+      return false;
+    }
+    switch (hire.getName()) {
       case "Cargo Master": 
         addCargoMaster();
         break;
@@ -159,7 +181,9 @@ public class Archipelago {
       default:
         break;
     }
-    player.addMember(possibleMembers[currentLand]);
+    possibleMembers[currentLand] = Crew.empty;
+    player.addMember(hire);
+    return true;
   }
   
   private void addCargoMaster() {
@@ -194,6 +218,10 @@ public class Archipelago {
   
   public int numShip() {
     return ships.length;
+  }
+  
+  public Populate populate() {
+    return populate;
   }
   
 }
