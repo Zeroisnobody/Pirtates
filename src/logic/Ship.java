@@ -99,8 +99,13 @@ public class Ship {
     shipwright = true;
   }
   
+  /**
+   * If there is life left, reduce life.
+   */
   public void getHit() {
-    lifeLeft -= 20;
+    if (lifeLeft > 0) {
+      lifeLeft -= 20;
+    }
   }
   
   /**
