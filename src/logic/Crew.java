@@ -32,4 +32,6 @@ public class Crew {
     this.salary = salary;
   }
   
+  public static Crew empty = new Crew("", 0);
+  
 }
