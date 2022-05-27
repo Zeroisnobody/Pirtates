@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import logic.Archipelago;
-import logic.Populate;
 import text.Main.Input;
 import text.Main.Output;
 
@@ -13,10 +12,9 @@ import text.Main.Output;
  * The User Interface (text-based).
 
  * @author Bryony
- * @param <R>
  *
  */
-public class Speak<R> {
+public class Speak {
 
   private Archipelago game;
   private Input user;
@@ -27,8 +25,8 @@ public class Speak<R> {
 
    * @Something went wrong with getting the user response.
    */
-  public Speak(Input user, Output out) {
-    game = new Archipelago();
+  public Speak(Archipelago game, Input user, Output out) {
+    this.game = game;
     this.user = user;
     this.out = out;
     out.print("Welcome to " + game.getIslandName() + "!");
@@ -40,8 +38,9 @@ public class Speak<R> {
         + "is well worth the price!");
     setSail();
   }
-  
-  private void setSail() {
+
+  protected void setSail() {
+    out.print("Set Sail?");
     Action action = Action.ONLAND;
     while (action == Action.ONLAND) {
       action = getAnswer(() -> {
@@ -52,10 +51,15 @@ public class Speak<R> {
     }
   }
 
-  private enum Action {
+  /**
+   * The possible states the game can be in.
+
+   * @author Bryony
+   *
+   */
+  protected enum Action {
     ATSEA,
     CHOOSEISLAND,
-    TRAVELTO,
     ONLAND,
     CHOOSEACTION,
     TRADE,
@@ -74,246 +78,78 @@ public class Speak<R> {
     HIRECREW
   }
 
-  private void rounds() {
+  protected void rounds() {
     boolean running = true;
     Action action = Action.ATSEA;
     ArrayList<Integer> savedNumber = new ArrayList<>();
     while (running) {
       switch (action) {
         case ATSEA: {
-          out.print("You are sailing at " + game.getSpeed() + " knots "
-              + "through the clear waters.");
-          out.print("Where do you want to head?");
-          List<String> islands = game.getIslandNames();
-          for (int i = 0; i < islands.size(); i++) {
-            out.print("\t" + islands.get(i) + " (" + i + ")");
-          }
-          action = Action.CHOOSEISLAND;
+          action = atSea();
           break;
         }
         case CHOOSEISLAND: {
-          Function<String, Action> basic = a -> {
-            out.print("\"Please enter the "
-                + "number of the island you want to travel to.");
-            return Action.CHOOSEISLAND;
-          };
-          Function<String, Action> other = a -> {
-            savedNumber.add(Integer.valueOf(a));
-            return Action.TRAVELTO;
-          };
-          action = getAnswer(basic, other, 5);
-          break;
-        }
-        case TRAVELTO: {
-          game.travelTo(savedNumber.remove(0));
-          out.print("You have arrived at " + game.getIslandName());
-          action = Action.ONLAND;
+          action = chooseIsland();
           break;
         }
         case ONLAND: {
-          out.print("What do you want to do?");
-          out.print("Trade (0)");
-          out.print("Look Around (1)");
-          out.print("Set Sail (2)");
-          action = Action.CHOOSEACTION;
+          action = onLand();
           break;
         }
         case CHOOSEACTION: {
-          Function<String, Action> basic = a -> {
-            out.print("Choose the number of the action you wish to perform.");
-            return Action.CHOOSEACTION;
-          };
-          action = getAnswer(basic, a -> {
-            return Action.TRADE;
-          }, b -> {
-            return Action.LOOKAROUND;
-          }, c -> {
-            return Action.ATSEA;
-          });
+          action = chooseAction();
           break;
         }
         case LOOKAROUND: {
-          switch (game.getIslandName()) {
-            case "Dragon Cove":
-              out.print("You find the shipyard.");
-              out.print("Your current ship:");
-              out.print("\t" + game.shipDescription());
-              action = Action.CONFIRMBUYSHIP;
-              break;
-            default: {
-              if (game.crewMemberAvailable()) {
-                out.print("You find a " + game.getCrewName());
-                action = Action.HIRECREW;
-              } else {
-                out.print("You find nothing.");
-                action = Action.ONLAND;
-              }
-            }
-          }
+          action = lookAround();
           break;
         }
         case CONFIRMBUYSHIP: {
-          out.print("Do you want to purchase a new ship?");
-          Supplier<Action> yes = () -> {
-            return Action.BUYSHIP;
-          };
-          action = getAnswer(yes, Action.ONLAND, Action.CONFIRMBUYSHIP);
+          action = confirmBuyShip();
           break;
         } 
         case HIRECREW: {
-          out.print("Would you like to hire a " + game.getCrewName()
-              + " for D" + game.getCrewCost());
-          Supplier<Action> yes = () -> {
-            out.print(game.getCrewName() + " has joined your crew.");
-            game.hireCrew();
-            return Action.ONLAND;
-          };
-          action = getAnswer(yes, Action.ONLAND, Action.HIRECREW);
+          action = hireCrew();
           break;
         }
         case BUYSHIP: {
-          List<String> ships = game.shipDescriptions();
-          for (int i = 0; i < ships.size(); i++) {
-            out.print("\t" + ships.get(i) + " (" + i + ")");
-          }
-          out.print("\tToo Expensive (" + ships.size() + ")");
-          action = Action.CHOOSESHIP;
+          action = buyShip();
           break;
         }
         case CHOOSESHIP: {
-          Function<String, Action> basic = a -> {
-            out.print("Choose the number of the ship you want to purchase.");
-            return Action.CHOOSESHIP;
-          };
-          Function<String, Action> other = a -> {
-            try {
-              int b = Integer.valueOf(a);
-              if (b < game.numShip()) {
-                game.buyShip(b);
-              }
-              return Action.ONLAND;
-            } catch (NumberFormatException e) {
-              return basic.apply(a);
-            }
-          };
-          action = getAnswer(basic, other, game.numShip() + 1);
+          action = chooseShip();
           break;
         }
         case TRADE: {
-          out.print("The prices for buying and selling on this island are :");
-          out.print("\tGrain = D" + game.islandGrain() + "\tSpices = D" + game.islandSpice());
-          out.print("\tMedicine = D" + game.islandMedicine() + "\tSilk = D" + game.islandSilk());
-          out.print("Do you wish to purchase (0) or sell (1)?");
-          action = Action.CHOOSETRADE;
+          action = trade();
           break;
         }
         case CHOOSETRADE: {
-          action = getAnswer(basic -> {
-            out.print("Choose the number of the trade you wish to perform.");
-            return Action.CHOOSETRADE;
-          }, purchase -> {
-            out.print("Doubloons = D" + game.wallet() + "\tCargo Space = " 
-                + game.cargoSpace() + "/" + game.cargoTotal());
-            out.print("What do you wish to buy?");
-            return Action.CHOOSEITEMBUY;
-          }, sell -> {
-            out.print("Grain = " + game.costItem(1, 0) + "\tSpices = " + game.costItem(1, 1));
-            out.print("Medicine = " + game.costItem(1, 2) + "\tSilk = " + game.costItem(1, 3));
-            out.print("What do you wish to sell?");
-            return Action.CHOOSEITEMSELL;
-          });
+          action = chooseTrade();
           break;
         }
         case CHOOSEITEMBUY: {
-          Function<String, Action> other = a -> {
-            savedNumber.add(Integer.valueOf(a));
-            return Action.PURCHASE;
-          };
-          Function<String, Action> basic = a -> {
-            out.print("Write the name of the item.");
-            return Action.CHOOSEITEMBUY;
-          };
-          action = getAnswer(basic, other, 4);
+          action = chooseItemBuy(savedNumber);
           break;
         }
         case CHOOSEITEMSELL: {
-          Function<String, Action> basic = a -> {
-            out.print("Write the name of the item.");
-            return Action.CHOOSEITEMSELL;
-          };
-          Function<String, Action> other = a -> {
-            try {
-              savedNumber.add(Integer.valueOf(a));
-              return Action.SELL;
-            } catch (NumberFormatException e) {
-              return basic.apply(a);
-            }
-          };
-          action = getAnswer(basic, other, 4);
+          action = chooseItemSell(savedNumber);
           break;
         }
         case PURCHASE: {
-          int index = savedNumber.remove(0);
-          Function<Integer, Action> number = a -> {
-            int ans = Math.min(a, game.getMaxItem(index));
-            out.print("Buying " + ans + " " + Populate.item(index) + " for D" 
-                + game.costItem(ans, index));
-            savedNumber.add(ans);
-            savedNumber.add(index);
-            return Action.CONFIRMPURCHASE;
-          };
-          Function<String, Action> string = a -> {
-            if (a.equals("max")) {
-              return number.apply(Integer.MAX_VALUE);
-            }
-            out.print("Choose either a whole number or max.");
-            return Action.PURCHASE;
-          };
-          action = getAnswer(number, string);
+          action = purchase(savedNumber);
           break;
         }
         case CONFIRMPURCHASE: {
-          int number = savedNumber.remove(0);
-          int index = savedNumber.remove(0);
-          out.print("Confirm?");
-          Supplier<Action> yes = () -> {
-            game.buyItem(number, index);
-            out.print("Thank you for your purchase.");
-            return Action.ONLAND;
-          };
-          action = getAnswer(yes, Action.ONLAND, Action.CONFIRMPURCHASE);
+          action = confirmPurchase(savedNumber);
           break;
         }
         case SELL: {
-          int index = savedNumber.remove(0);
-          Function<Integer, Action> number = a -> {
-            int ans = Math.min(a, game.captainItem(index));
-            out.print("Selling " + ans + " " + Populate.item(index) + " for D" 
-                + game.costItem(ans, index));
-            savedNumber.add(ans);
-            savedNumber.add(index);
-            return Action.CONFIRMSELL;
-          };
-          Function<String, Action> string = a -> {
-            if (a.equals("max")) {
-              return number.apply(Integer.MAX_VALUE);
-            }
-            out.print("Choose either a whole number or max.");
-            return Action.SELL;
-          };
-          action = getAnswer(number, string);
+          action = sell(savedNumber);
           break;
         }
         case CONFIRMSELL: {
-          int number = savedNumber.remove(0);
-          int index = savedNumber.remove(0);
-          out.print("Confirm?");
-          Supplier<Action> yes = () -> {
-            game.sellItem(number, index);
-            out.print("Thank you for your sale.");
-            return Action.ONLAND;
-          };
-          action = getAnswer(yes, Action.ONLAND, Action.CONFIRMSELL);
+          action = confirmSell(savedNumber);
           break;
         }
         case QUIT: {
@@ -328,270 +164,248 @@ public class Speak<R> {
     }
   }
 
+  protected Action atSea() {
+    out.print("You are sailing at " + game.getSpeed() + " knots "
+        + "through the clear waters.");
+    out.print("Where do you want to head?");
+    List<String> islands = game.getIslandNames();
+    for (int i = 0; i < islands.size(); i++) {
+      out.print("\t" + islands.get(i) + " (" + i + ")");
+    }
+    return Action.CHOOSEISLAND;
+  }
 
+  protected Action chooseIsland() {
+    Function<String, Action> basic = a -> {
+      out.print("Please enter the "
+          + "number of the island you want to travel to.");
+      return Action.CHOOSEISLAND;
+    };
+    Function<String, Action> other = a -> {
+      game.travelTo(Integer.valueOf(a));
+      out.print("You have arrived at " + game.getIslandName());
+      return Action.ONLAND;
+    };
+    return getAnswer(basic, other, 5);
+  }
 
+  protected Action onLand() {
+    out.print("What do you want to do?");
+    out.print("Trade (0)");
+    out.print("Look Around (1)");
+    out.print("Set Sail (2)");
+    return Action.CHOOSEACTION;
+  }
 
+  protected Action chooseAction() {
+    Function<String, Action> basic = a -> {
+      out.print("Choose the number of the action you wish to perform.");
+      return Action.CHOOSEACTION;
+    };
+    return getAnswer(basic, a -> {
+      return Action.TRADE;
+    }, b -> {
+      return Action.LOOKAROUND;
+    }, c -> {
+      return Action.ATSEA;
+    });
+  }
 
-//  private void startJourney() {
-//    if (game.atSea()) {
-//      out.print("You are sailing at " + game.getSpeed() + " knots "
-//          + "through the clear waters.");
-//      out.print("Where do you want to head?");
-//      List<String> islands = game.getIslandNames();
-//      for (int i = 0; i < islands.size(); i++) {
-//        out.print("\t" + islands.get(i) + " (" + i + ")");
-//      }
-//      chooseIsland();
-//    }
-//  }
-//
-//  private void chooseIsland() {
-//    String answer = user.read();
-//    switch (answer) {
-//      case "0": 
-//        travelTo(0);
-//        break;
-//      case "1": 
-//        travelTo(1);
-//        break;
-//      case "2": 
-//        travelTo(2);
-//        break;
-//      case "3": 
-//        travelTo(3);
-//        break;
-//      case "4": 
-//        travelTo(4);
-//        break;
-//      case "quit":
-//        System.exit(0);
-//        break;
-//      default:
-//        out.print("Please enter the number of the island you want to travel to.");
-//        chooseIsland();
-//    }
-//  }
-//
-//  private void travelTo(int index) {
-//    game.travelTo(index);
-//    out.print("You have arrived at " + game.getIslandName());
-//
-//    boolean onLand = true;
-//    while (onLand) { 
-//      out.print("What do you want to do?");
-//      out.print("Trade (0)");
-//      out.print("Look Around (1)");
-//      out.print("Set Sail (2)");
-//      onLand = chooseAction();
-//    }
-//  }
-//
-//  private boolean chooseAction() {
-//    String answer = user.read();
-//    switch (answer) {
-//      case "0": 
-//        trade();
-//        return true;
-//      case "1": 
-//        lookAround();
-//        return true;
-//      case "2":
-//        startJourney();
-//        return false;
-//      case "quit":
-//        System.exit(0);
-//        return false;
-//      default:
-//        out.print("Choose the number of the action you wish to perform.");
-//        return chooseAction();
-//    }
-//  }
-//
-//  private void lookAround() {
-//    switch (game.getIslandName()) {
-//      case "Dragon Cove": 
-//        out.print("You find the shipyard.");
-//        out.print("Your current ship:");
-//        out.print("\t" + game.shipDescription());
-//        if (confirm("Do you want to purchase a new ship?")) {
-//          buyShip();
-//        }
-//        break;
-//      default:
-//        if (game.crewMemberAvailable()) {
-//          out.print("You find a " + game.getCrewName());
-//          if (confirm("Would you like to hire them for " + game.getCrewCost())) {
-//            out.print(game.getCrewName() + " has joined your crew.");
-//            game.hireCrew();
-//          }
-//        } else {
-//          out.print("You find nothing.");
-//        }
-//    }
-//  }
-//
-//  private void buyShip() {
-//    List<String> ships = game.shipDescriptions();
-//    for (int i = 0; i < ships.size(); i++) {
-//      out.print("\t" + ships.get(i) + " (" + i + ")");
-//    }
-//    out.print("\tToo Expensive (" + ships.size() + ")");
-//    chooseShip(ships.size());
-//  }
-//
-//  private void chooseShip(int size) {
-//    String answer = user.read();
-//    if (answer.equals("quit")) {
-//      System.exit(0);
-//    }
-//    try {
-//      int index = Integer.valueOf(answer);
-//      if (index >= 0 && index < size) {
-//        game.buyShip(index);
-//      } else if (index == size) {
-//        return;
-//      } else {
-//        throw new NumberFormatException();
-//      }
-//    } catch (NumberFormatException e) {
-//      out.print("Choose the number of the ship you want to purchase.");
-//      chooseShip(size);
-//    }
-//  }
-//
-//  private void trade() {
-//    out.print("The prices for buying and selling on this island are :");
-//    out.print("\tGrain = D" + game.islandGrain() + "\tSpices = D" + game.islandSpice());
-//    out.print("\tMedicine = D" + game.islandMedicine() + "\tSilk = D" + game.islandSilk());
-//    out.print("Do you wish to purchase (0) or sell (1)?");
-//    chooseTrade();
-//  }
-//
-//  private void chooseTrade() {
-//    String answer = user.read();
-//    switch (answer) {
-//      case "0": {
-//        out.print("Doubloons = D" + game.wallet() + "\tCargo Space = " 
-//            + game.cargoSpace() + "/" + game.cargoTotal());
-//        out.print("What do you wish to buy?");
-//        int index = chooseItem();
-//        out.print("How many do you want to buy?");
-//        purchase(index);
-//        break;
-//      }
-//      case "1": {
-//        out.print("Grain = " + game.costItem(1, 0) + "\tSpices = " + game.costItem(1, 1));
-//        out.print("Medicine = " + game.costItem(1, 2) + "\tSilk = " + game.costItem(1, 3));
-//        out.print("What do you wish to sell?");
-//        int index = chooseItem();
-//        out.print("How many do you want to sell?");
-//        sell(index);
-//        break;
-//      }
-//      case "quit":
-//        System.exit(0);
-//        break;
-//      default:
-//        out.print("Choose the number of the trade you wish to perform.");
-//        chooseTrade();
-//    }
-//  }
-//
-//  private int chooseItem() {
-//    String answer = user.read().toLowerCase();
-//    switch (answer) {
-//      case "grain":
-//        return 0;
-//      case "spices":
-//        return 1;
-//      case "medicine":
-//        return 2;
-//      case "silk":
-//        return 3;
-//      case "quit":
-//        System.exit(0);
-//        return -1;
-//      default:
-//        out.print("Write the name of the item.");
-//        return chooseItem();
-//    }
-//  }
-//
-//  private void purchase(int index) {
-//    String answer = user.read();
-//    if (answer.equalsIgnoreCase("max")) {
-//      int max = game.getMaxItem(index);
-//      out.print("Buying " + max + " " + Populate.item(index) + " for D" 
-//          + game.costItem(max, index));
-//      if (confirm()) {
-//        game.buyItem(max, index);
-//        out.print("Thank you for your purchase.");
-//      }
-//    } else if (answer.equals("quit")) {
-//      System.exit(0);
-//    } else {
-//      try {
-//        int ans = Math.min(Integer.valueOf(answer), game.getMaxItem(index));
-//        out.print("Buying " + ans + " " + Populate.item(index) + " for D" 
-//            + game.costItem(ans, index));
-//        if (confirm()) {
-//          game.buyItem(ans, index);
-//          out.print("Thank you for your purchase.");
-//        }
-//      } catch (NumberFormatException e) {
-//        out.print("Choose either a whole number or max.");
-//      }
-//    }
-//  }
-//
-//  private boolean confirm() {
-//    return confirm("Confirm?");
-//  }
-//
-//  private boolean confirm(String message) {
-//    out.print(message);
-//    String answer = user.read();
-//    if (answer.equalsIgnoreCase("yes")) {
-//      return true;
-//    } else if (answer.equalsIgnoreCase("no")) {
-//      return false;
-//    } else if (answer.equals("quit")) {
-//      System.exit(0);
-//      return false;
-//    } else {
-//      return confirm(message);
-//    }
-//  }
-//
-//  private void sell(int index) {
-//    String answer = user.read();
-//    if (answer.equalsIgnoreCase("max")) {
-//      int max = game.captainItem(index);
-//      out.print("Selling " + max + " " + Populate.item(index) + " for D" 
-//          + game.costItem(max, index));
-//      if (confirm()) {
-//        game.sellItem(max, index);
-//        out.print("Thank you for your sale.");
-//      }
-//    } else if (answer.equals("quit")) {
-//      System.exit(0);
-//    } else {
-//      try {
-//        int ans = Math.min(Integer.valueOf(answer), game.getMaxItem(index));
-//        out.print("Selling " + ans + " " + Populate.item(index) + " for D" 
-//            + game.costItem(ans, index));
-//        if (confirm()) {
-//          game.sellItem(ans, index);
-//          out.print("Thank you for your sale.");
-//        }
-//      } catch (NumberFormatException e) {
-//        out.print("Choose either a whole number or max.");
-//      }
-//    }
-//  }
+  protected Action lookAround() {
+    switch (game.getIslandName()) {
+      case "Dragon Cove":
+        out.print("You find the shipyard.");
+        out.print("Your current ship:");
+        out.print("\t" + game.shipDescription());
+        return Action.CONFIRMBUYSHIP;
+      default: {
+        if (game.crewMemberAvailable()) {
+          out.print("You find a " + game.getCrewName());
+          return Action.HIRECREW;
+        } else {
+          out.print("You find nothing.");
+          return Action.ONLAND;
+        }
+      }
+    }
+  }
+
+  protected Action confirmBuyShip() {
+    out.print("Do you want to purchase a new ship?");
+    Supplier<Action> yes = () -> {
+      return Action.BUYSHIP;
+    };
+    return getAnswer(yes, Action.ONLAND, Action.CONFIRMBUYSHIP);
+  }
+
+  protected Action hireCrew() {
+    out.print("Would you like to hire a " + game.getCrewName() + " for D" + game.getCrewCost());
+    Supplier<Action> yes = () -> {
+      String name = game.getCrewName();
+      if (game.hireCrew()) {
+        out.print(name + " has joined your crew.");
+      } else {
+        out.print("You did not have enough money to hire the " + game.getCrewName());
+      }
+      return Action.ONLAND;
+    };
+    return getAnswer(yes, Action.ONLAND, Action.HIRECREW);
+  }
+
+  protected Action buyShip() {
+    List<String> ships = game.shipDescriptions();
+    for (int i = 0; i < ships.size(); i++) {
+      out.print("\t" + ships.get(i) + " (" + i + ")");
+    }
+    out.print("\tToo Expensive (" + ships.size() + ")");
+    return Action.CHOOSESHIP;
+  }
+
+  protected Action chooseShip() {
+    Function<String, Action> basic = a -> {
+      out.print("Choose the number of the ship you want to purchase.");
+      return Action.CHOOSESHIP;
+    };
+    Function<String, Action> other = a -> {
+      int b = Integer.valueOf(a);
+      if (b < game.numShip()) {
+        if (game.buyShip(b)) {
+          out.print("Your new ship is waiting at the docks for you.");
+        } else {
+          out.print("You don't have enough money. Come back later.");
+        }
+      }
+      return Action.ONLAND;
+    };
+    return getAnswer(basic, other, game.numShip() + 1);
+  }
+
+  protected Action trade() {
+    out.print("The prices for buying and selling on this island are :");
+    out.print("\tGrain = D" + game.islandGrain() + "\tSpices = D" + game.islandSpice());
+    out.print("\tMedicine = D" + game.islandMedicine() + "\tSilk = D" + game.islandSilk());
+    out.print("Do you wish to purchase (0) or sell (1)?");
+    return Action.CHOOSETRADE;
+  }
+
+  protected Action chooseTrade() {
+    return getAnswer(basic -> {
+      out.print("Choose the number of the trade you wish to perform.");
+      return Action.CHOOSETRADE;
+    }, purchase -> {
+      out.print("Doubloons = D" + game.wallet() + "\tCargo Space = " 
+          + game.cargoSpace() + "/" + game.cargoTotal());
+      out.print("What do you wish to buy?");
+      return Action.CHOOSEITEMBUY;
+    }, sell -> {
+      out.print("(0) Grain = " + game.costItem(1, 0) + "\t(1) Spices = " + game.costItem(1, 1));
+      out.print("(2) Medicine = " + game.costItem(1, 2) + "\t(3) Silk = " + game.costItem(1, 3));
+      out.print("What do you wish to sell?");
+      return Action.CHOOSEITEMSELL;
+    });
+  }
+
+  protected Action chooseItemBuy(ArrayList<Integer> savedNumber) {
+    Function<String, Action> other = a -> {
+      savedNumber.add(Integer.valueOf(a));
+      return Action.PURCHASE;
+    };
+    Function<String, Action> basic = a -> {
+      if (a.equals("cancel")) {
+        return Action.ONLAND;
+      }
+      out.print("Write the index of the item or cancel.");
+      return Action.CHOOSEITEMBUY;
+    };
+    return getAnswer(basic, other, 4);
+  }
+
+  protected Action chooseItemSell(ArrayList<Integer> savedNumber) {
+    Function<String, Action> basic = a -> {
+      if (a.equals("cancel")) {
+        return Action.ONLAND;
+      }
+      out.print("Write the index of the item or cancel.");
+      return Action.CHOOSEITEMSELL;
+    };
+    Function<String, Action> other = a -> {
+      savedNumber.add(Integer.valueOf(a));
+      return Action.SELL;
+    };
+    return getAnswer(basic, other, 4);
+  }
+
+  protected Action purchase(ArrayList<Integer> savedNumber) {
+    int index = savedNumber.remove(0);
+    Function<Integer, Action> number = a -> {
+      int ans = Math.min(a, game.getMaxItem(index));
+      out.print("Buying " + ans + " " + game.populate().item(index) + " for D" 
+          + game.costItem(ans, index));
+      savedNumber.add(ans);
+      savedNumber.add(index);
+      return Action.CONFIRMPURCHASE;
+    };
+    Function<String, Action> string = a -> {
+      if (a.equals("max")) {
+        return number.apply(Integer.MAX_VALUE);
+      } else if (a.equals("cancel")) {
+        return Action.ONLAND;
+      }
+      out.print("Choose either a whole number, max, or cancel.");
+      return Action.PURCHASE;
+    };
+    return getAnswer(number, string);
+  }
+  
+  protected Action confirmPurchase(ArrayList<Integer> savedNumber) {
+    int number = savedNumber.remove(0);
+    int index = savedNumber.remove(0);
+    out.print("Confirm?");
+    Supplier<Action> yes = () -> {
+      game.buyItem(number, index);
+      out.print("Thank you for your purchase.");
+      return Action.ONLAND;
+    };
+    return getAnswer(yes, Action.ONLAND, Action.CONFIRMPURCHASE);
+  }
+  
+  protected Action sell(ArrayList<Integer> savedNumber) {
+    int index = savedNumber.remove(0);
+    Function<Integer, Action> number = a -> {
+      int ans = Math.min(a, game.captainItem(index));
+      out.print("Selling " + ans + " " + game.populate().item(index) + " for D" 
+          + game.costItem(ans, index));
+      savedNumber.add(ans);
+      savedNumber.add(index);
+      return Action.CONFIRMSELL;
+    };
+    Function<String, Action> string = a -> {
+      if (a.equals("max")) {
+        return number.apply(Integer.MAX_VALUE);
+      } else if (a.equals("cancel")) {
+        return Action.ONLAND;
+      }
+      out.print("Choose either a whole number, max, or cancel.");
+      return Action.SELL;
+    };
+    return getAnswer(number, string);
+  }
+  
+  protected Action confirmSell(ArrayList<Integer> savedNumber) {
+    int number = savedNumber.remove(0);
+    int index = savedNumber.remove(0);
+    out.print("Confirm?");
+    Supplier<Action> yes = () -> {
+      game.sellItem(number, index);
+      out.print("Thank you for your sale.");
+      return Action.ONLAND;
+    };
+    return getAnswer(yes, Action.ONLAND, Action.CONFIRMSELL);
+  }
 
   @SafeVarargs
-  private Action getAnswer(Function<String, Action> basic, Function<String, Action>... results) {
+  protected final Action getAnswer(Function<String, Action> basic, 
+      Function<String, Action>... results) {
     return getAnswer(answer -> {
       for (int i = 0; i < results.length; i++) {
         if (answer.equals(i + "")) {
@@ -602,7 +416,7 @@ public class Speak<R> {
     });
   }
 
-  private Action getAnswer(Function<String, Action> basic, 
+  protected Action getAnswer(Function<String, Action> basic, 
       Function<String, Action> other, int options) {
     return getAnswer(answer -> {
       for (int i = 0; i < options; i++) {
@@ -613,8 +427,8 @@ public class Speak<R> {
       return basic.apply(answer);
     });
   }
-  
-  private Action getAnswer(Function<Integer, Action> number, Function<String, Action> string) {
+
+  protected Action getAnswer(Function<Integer, Action> number, Function<String, Action> string) {
     return getAnswer(answer -> {
       try {
         int integer = Integer.valueOf(answer);
@@ -624,8 +438,8 @@ public class Speak<R> {
       }
     });
   }
-  
-  private Action getAnswer(Supplier<Action> yes, Action no, Action other) {
+
+  protected Action getAnswer(Supplier<Action> yes, Action no, Action other) {
     return getAnswer(answer -> {
       if (answer.equals("yes")) {
         return yes.get();
@@ -635,8 +449,8 @@ public class Speak<R> {
       return other;
     });
   }
-  
-  private Action getAnswer(Function<String, Action> action) {
+
+  protected Action getAnswer(Function<String, Action> action) {
     String answer = user.read();
     if (answer.equals("quit")) {
       return Action.QUIT;
